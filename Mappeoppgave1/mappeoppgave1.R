@@ -7,6 +7,8 @@ library(scales)
 library(dplyr)
 
 
+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
+
 # henter data settet
 # Lower Troposphere :
 data1 <- read_table("https://www.nsstc.uah.edu/data/msu/v6.0/tlt/uahncdc_lt_6.0.txt")
