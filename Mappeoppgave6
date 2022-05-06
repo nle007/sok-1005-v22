@@ -1,0 +1,176 @@
+# Oppgave B 
+#import blotto
+#Samarbeid med Marthe Moe
+import numpy as np
+
+def player_strategy(n_battalions,n_fields):
+    battalions=np.zeros(n_fields,dtype=int)
+    
+    battalions[0:1]=0
+    battalions[1:]=20
+
+    battalions=battalions[np.random.rand(n_fields).argsort()]
+    assert sum(battalions)==n_battalions
+    
+    return battalions
+
+def computer_strategy(n_battalions,n_fields):
+    battalions=np.zeros(n_fields,dtype=int)
+    battalions[0:1]=12
+    battalions[1:4]=20
+    battalions[4:]=14
+    assert sum(battalions)==n_battalions
+    return battalions
+
+def call_battle(n_battalions,n_fields, player_strategy, computer_strategy):
+    c_battlions=computer_strategy(n_battalions,n_fields)
+    p_battlions=player_strategy(n_battalions,n_fields)
+
+    diff=p_battlions-c_battlions
+    points=sum(diff>0)-sum(diff<0)
+ 
+    return int(points>0)-int(points<0)
+
+def test_strategies(n_fields,n_battalions,player_strategy, computer_strategy):
+    n_tests=100000
+    r=0
+    record=[]
+    for i in range(n_tests):
+        p=call_battle(n_battalions,n_fields,
+            player_strategy, computer_strategy)
+        record.append(p)
+        r+=p
+    return r/n_tests
+
+r= test_strategies(6,100,player_strategy, computer_strategy)
+print(r)
+
+
+## Oppgave A
+
+from bs4 import BeautifulSoup
+import requests
+
+def fetch_html_tables(url):
+    "Returns a list of tables in the html of url"
+    page = requests.get(url)
+    bs=BeautifulSoup(page.content)
+    tables=bs.find_all('table')
+    return tables
+
+tables=fetch_html_tables('https://gullvakten.no/gullpriser/')
+table_html=tables[0]
+
+#printing top
+print(str(table_html)[:1000])
+
+
+def html_to_table(html):
+    "Returns the table defined in html as a list"
+    #defining the table:
+    table=[]
+    #iterating over all rows
+    for row in html.find_all('tr'):
+        r=[]
+        #finding all cells in each row:
+        cells=row.find_all('td')
+        
+        #if no cells are found, look for headings
+        if len(cells)==0:
+            cells=row.find_all('th')
+            
+        #iterate over cells:
+        for cell in cells:
+            cell=format(cell)
+            r.append(cell)
+        
+        #append the row to t:
+        table.append(r)
+    return table
+
+def format(cell):
+    "Returns a string after converting bs4 object cell to clean text"
+    if cell.content is None:
+        s=cell.text
+    elif len(cell.content)==6:
+        return ''
+    else:
+        s=' '.join([str(c) for c in cell.content])
+        
+    #here you can add additional characters/strings you want to 
+    #remove, change punctuations or format the string in other
+    #ways:
+    s=s.replace('\xa0','')
+    s=s.replace('\n','')
+    s=s.replace('k','')
+    s=s.replace('tanngull','')
+    s=s.replace('Karat','')
+    s=s.replace('arat','')
+    s=s.replace(' ','')
+    s=s.replace(',-','')
+    s=s.replace('-,','')
+    s=s.replace(',–','')
+    
+    
+    return s
+
+table=html_to_table(table_html)
+
+#printing top
+print(str(table)[:1000])
+
+
+';'.join(table[1])
+
+
+def save_data(file_name,table):
+    "Saves table to file_name"
+    f=open(file_name,'w')
+    for row in table:
+        f.write(';'.join(row)+'\n')
+    f.close()
+    
+save_data('kjørelengde.csv',table)
+
+
+import pandas as pd
+g=pd.read_csv('kjørelengde.csv', delimiter=';')
+g=g.rename(columns={'Unnamed: 0': 'Karat'})
+
+
+g
+
+
+y=g['life_exp']
+pd.DataFrame(y)
+
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+fig,ax=plt.subplots()
+
+#adding axis lables:
+ax.set_ylabel('Forventet antall leveår')
+ax.set_xlabel('BNP per innbygger')
+
+#plotting the function:
+ax.scatter(np.log(g['WLTP-tall']), g['STOPP'],  label='Observasjoner')
+ax.legend(loc='lower right',frameon=False)
+
+
+from statsmodels.regression.linear_model import OLS
+
+res=OLS(g['Karat'].astype(float), g['Pris'].astype(float)).fit()
+
+print(res.summary())
+
+
+
+
+import seaborn as sns 
+
+sns.regplot(x= 'U', y= 'Pris', data = g)
+
+
+
